@@ -1,0 +1,8 @@
+@startuml
+node "Button1App"{
+[button1]
+evt_button - [button]
+[button1] -> evt_button : but
+[Button1App_button] ..> org.sintef.thingml.impl.ProtocolImpl@544a2ea6 (name: Timer)
+}
+@enduml

@@ -1,0 +1,65 @@
+import "AdafruitLCDShield.thingml"
+
+thing ShutterTimer includes Adafruit_1_8pLCDShieldClient, TimerMsgs 
+	
+@c_header ""
+
+@c_global "
+
+
+
+"
+
+{
+	required port timer 
+//	@sync_send "true"
+	{
+		receives 250ms_tic, timeout
+		sends timer_start, timer_cancel
+	}
+	
+	statechart ShutterTimerStateChart init Init {
+		
+		state Init {
+			transition -> OFF event e : lcd?LCDready
+		}
+
+		state OFF {
+			on entry do
+				print "[Client] LCD Init\n"
+                lcd!clear()
+                
+			end
+			transition -> Splash
+		}
+		state Splash {
+			on entry do
+				print "[Client] DrawRect\n"
+				lcd!drawRect(1,1,126,158,'0xFFFF')
+			end
+			transition -> ON
+		}
+
+		state ON {
+			
+			property flipflop : UInt8 = 0
+		
+	    	internal event e : button?button_state_change action do
+                print "Button: "
+                print e.bstate
+                print "\n"
+                
+                lcd!fillRect(10,10,100,10, '0x0000')
+                lcd!set_cursor(10,10)
+                lcd!print_str("Button: ")
+                lcd!print_num(e.bstate)
+            end   
+            
+            internal event timer?250ms_tic action do 
+            	if (flipflop == 0) lcd!fillRect(100,100,10,10, '0xF000')
+            	else lcd!fillRect(100,100,10,10, '0x0000')
+            	flipflop = 1 - flipflop
+            end
+		}
+	}
+}

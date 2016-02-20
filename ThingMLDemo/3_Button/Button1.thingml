@@ -1,0 +1,34 @@
+import "../BUTTON.thingml"
+
+
+thing Button1 includes ButtonMsgs {
+	
+	required port but {receives press, release}
+	
+	statechart TestButton init Waiting {
+		
+		on entry print "READY!\n"
+	
+		state Waiting {
+
+			internal event but?press action print "PRESS\n"
+			internal event but?release action print "RELEASE\n"
+
+		}	
+	}
+}
+
+protocol Timer;
+
+configuration Button1App 
+@arduino_stdout "Serial"
+{
+
+	instance button : Button
+		set button.PIN = 8
+	connector button.clock over Timer	
+
+	instance button1 : Button1
+	connector button1.but => button.evt
+
+}

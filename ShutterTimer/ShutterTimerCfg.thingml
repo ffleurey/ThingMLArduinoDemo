@@ -1,0 +1,17 @@
+import "ShutterTimer.thingml"
+
+protocol Timer;
+
+configuration ShutterTimerCfg 
+@arduino_stdout "Serial"
+{
+    instance application: ShutterTimer	 @debug "false"
+	instance lcd : Adafruit_1_8pLCDShieldShield
+
+	connector application.button => lcd.button
+	connector application.lcd => lcd.lcd
+
+	connector lcd.timer over Timer
+	
+	connector application.timer over Timer
+}

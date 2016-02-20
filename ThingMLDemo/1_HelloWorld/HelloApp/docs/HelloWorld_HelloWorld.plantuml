@@ -1,0 +1,12 @@
+@startuml
+[*] --> HelloWorld
+state HelloWorld{
+state Greetings{
+	Greetings : entry / 'Serial.println("Hello World!");'
+
+}
+[*] --> Greetings
+	HelloWorld : entry / 'Serial.begin(9600);'
+
+}
+@enduml

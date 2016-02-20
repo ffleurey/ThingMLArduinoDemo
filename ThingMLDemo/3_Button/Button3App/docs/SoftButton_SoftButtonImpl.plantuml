@@ -1,0 +1,23 @@
+@startuml
+[*] --> SoftButtonImpl
+state SoftButtonImpl{
+state Idle{
+Idle --> Pressed : press?Button
+}
+state Pressed{
+	Pressed : entry / Timer!timer_start(0long_delay)
+
+Pressed --> Idle : timer_timeout?Timer\ndo SoftButton!long_press()\n
+Pressed --> Released : release?Button\ndo Timer!timer_cancel(0)\n
+}
+state Released{
+	Released : entry / Timer!timer_start(0double_delay)
+
+	Released : Exit / ExitActions() = Timer!timer_cancel(0)
+
+Released --> Idle : timer_timeout?Timer\ndo SoftButton!click()\n
+Released --> Idle : press?Button\ndo SoftButton!double_click()\n
+}
+[*] --> Idle
+}
+@enduml

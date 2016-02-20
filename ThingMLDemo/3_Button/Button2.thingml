@@ -1,0 +1,63 @@
+import "../LED.thingml"
+import "../BUTTON.thingml"
+
+
+thing TestButton includes ButtonMsgs, LEDMsgs, TimerMsgs {
+	
+	required port led1 {sends led_ON, led_OFF}
+	required port led2 {sends led_ON, led_OFF}
+	required port but {receives press, release}
+	required port timer 
+	@sync_send "true"
+	{
+		receives timer_timeout
+		sends timer_start, timer_cancel
+	}
+	
+	statechart TestButton init Waiting {
+	
+		state Waiting {
+
+			on entry do
+				led1!led_OFF()
+				led2!led_OFF()
+			end
+			
+			internal event but?press action do
+				led1!led_ON()
+				timer!timer_start(0, 1000)
+			end
+			
+			internal event but?release action do
+				led2!led_ON()
+				timer!timer_start(1, 1000)
+			end
+			
+			internal event e : timer?timer_timeout action do
+				if (e.id == 0) led1!led_OFF()
+				else if (e.id == 1) led2!led_OFF()
+			end
+		}	
+	}
+}
+
+protocol Timer;
+
+configuration Button2App {
+
+	instance button : Button
+		set button.PIN = 8
+	connector button.clock over Timer	
+	
+	instance l1 : LED
+		set l1.PIN = 11
+	instance l2 : LED
+		set l1.PIN = 12
+		
+	instance app : TestButton
+	connector app.but => button.evt
+	connector app.led1 => l1.ctrl
+	connector app.led2 => l2.ctrl
+	connector app.timer over Timer
+
+}

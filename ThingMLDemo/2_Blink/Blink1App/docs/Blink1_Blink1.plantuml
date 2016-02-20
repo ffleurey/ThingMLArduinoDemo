@@ -1,0 +1,18 @@
+@startuml
+[*] --> Blink1
+state Blink1{
+state OFF{
+	OFF : entry / 'digitalWrite(12, LOW);'
+
+OFF --> ON : tic?clock
+}
+state ON{
+	ON : entry / 'digitalWrite(12, HIGH);'
+
+ON --> OFF : tic?clock
+}
+[*] --> OFF
+	Blink1 : entry / 'pinMode(12, OUTPUT);'
+
+}
+@enduml

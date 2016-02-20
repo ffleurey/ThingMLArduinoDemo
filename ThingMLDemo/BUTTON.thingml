@@ -1,0 +1,41 @@
+import "_Datatypes.thingml"
+
+thing fragment ButtonMsgs 
+{
+	message press ();
+	message release ();
+}
+
+thing Button includes ButtonMsgs, TimerMsgs
+{		
+	
+	required port clock {
+		receives 25ms_tic
+	}
+	
+	provided port evt 
+	{
+		sends press, release
+	}
+	
+	property PIN: UInt8 = 8
+	
+	function is_pressed() : Boolean do
+		return 'digitalRead('&PIN&')'
+	end
+	
+	statechart Button init RELEASED {
+	
+		state RELEASED {
+			transition -> PRESSED event clock?25ms_tic
+			guard is_pressed()
+			action evt!press()
+		}
+		
+		state PRESSED {
+			transition -> RELEASED event clock?25ms_tic
+			guard not is_pressed()
+			action evt!release()
+		}
+	}
+}

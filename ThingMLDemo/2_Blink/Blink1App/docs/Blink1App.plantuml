@@ -1,0 +1,6 @@
+@startuml
+node "Blink1App"{
+[blink1]
+[blink1] <.. Timer
+}
+@enduml

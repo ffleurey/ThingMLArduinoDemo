@@ -1,0 +1,46 @@
+import "../LED.thingml"
+
+thing Blink2 includes TimerMsgs, LEDMsgs { 
+
+	required port timer 
+	@sync_send "true"
+	{
+		receives timer_timeout
+		sends timer_start, timer_cancel
+	}
+	
+	required port led {
+		sends led_ON, led_OFF
+	}
+
+	statechart Blink init OFF {
+	
+		state OFF {
+			on entry do 
+				led!led_OFF()
+				timer!timer_start(0, 1200)
+			end
+			transition -> ON event e : timer?timer_timeout 
+		}	
+		
+		state ON {
+			on entry do 
+				led!led_ON()
+				timer!timer_start(0, 50)
+			end
+			transition -> OFF event e : timer?timer_timeout
+		}	
+	}
+}
+
+protocol Timer;
+
+configuration Blink2App
+{
+	instance blink2 : Blink2
+	instance led13 : LED 
+		set led13.PIN = 11
+	
+	connector blink2.led => led13.ctrl
+	connector blink2.timer over Timer
+}

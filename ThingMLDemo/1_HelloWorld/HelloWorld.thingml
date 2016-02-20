@@ -1,0 +1,17 @@
+
+thing HelloWorld { 
+
+	statechart HelloWorld init Greetings {
+	
+		on entry 'Serial.begin(9600);'
+	
+		state Greetings {
+				on entry 'Serial.println("Hello World!");'	
+		}	
+	}
+}
+
+configuration HelloApp
+{
+	instance hello : HelloWorld
+}
