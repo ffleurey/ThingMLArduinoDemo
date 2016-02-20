@@ -1,0 +1,179 @@
+
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+
+volatile uint16_t measured_interval = 0;
+volatile uint8_t measured_interval_u = 0;
+volatile uint8_t measured_interval_ready = 0;
+
+volatile uint16_t interval_count = 0; // Maximum interval which can be measured is 8 sec.
+/***************************************************************************************/
+/*    USE PIN 2 TO TRIGGER EXTERNAL INTERRUPTS */
+/***************************************************************************************/
+
+
+volatile uint8_t input_value = 0;
+
+SIGNAL(INT0_vect) {
+  input_value = digitalRead(2);
+  if (input_value) {
+      measured_interval_u = TCNT0;
+      measured_interval = interval_count;
+      measured_interval_ready = 1;
+  }
+  else {
+    TCNT0 = 0;
+    interval_count = 0;
+  }
+}
+
+void init_external_interrupt_pin2() {
+  pinMode(2, OUTPUT);
+  digitalWrite(2, HIGH);
+  // Global Enable INT0 interrupt
+  EIMSK |= ( 1 << INT0);
+  // Signal change triggers interrupt
+  EICRA |= ( 1 << ISC00);
+  EICRA |= ( 0 << ISC01);
+}
+/***************************************************************************************/
+
+/***************************************************************************************/
+/*    TIMER TO COUNT MICROSECONDS */
+/***************************************************************************************/
+
+SIGNAL(TIMER2_OVF_vect) { // Overflow every 127.5 uS
+  interval_count++;
+}
+
+void init_timer2() {
+  // Run timer2 interrupt up counting at 2MHz 
+  TCCR2A = 0;
+  TCCR2B = 0<<CS22 | 1<<CS21 | 0<<CS20;
+		
+  //Timer0 Overflow Interrupt Enable
+  TIMSK2 |= 1<<TOIE0; 
+}
+/***************************************************************************************/
+
+
+// TFT display and SD card will share the hardware SPI interface.
+// Hardware SPI pins are specific to the Arduino board type and
+// cannot be remapped to alternate pins.  For Arduino Uno,
+// Duemilanove, etc., pin 11 = MOSI, pin 12 = MISO, pin 13 = SCK.
+#define SD_CS    4  // Chip select line for SD card
+#define TFT_CS  10  // Chip select line for TFT display
+#define TFT_DC   8  // Data/command line for TFT
+#define TFT_RST  -1  // Reset line for TFT (or connect to +5V)
+
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+#define BUTTON_NONE 0
+#define BUTTON_DOWN 1
+#define BUTTON_RIGHT 2
+#define BUTTON_SELECT 3
+#define BUTTON_UP 4
+#define BUTTON_LEFT 5
+
+void setup(void) {
+  Serial.begin(115200);
+  init_timer2();
+  init_external_interrupt_pin2();
+  // Initialize 1.8" TFT
+  tft.initR(INITR_BLACKTAB);   // initialize a ST7735S chip, black tab
+  tft.fillScreen(ST7735_BLACK);
+  sei();
+  measured_interval_ready = 0;
+}
+
+
+uint8_t readButton(void) {
+  float a = analogRead(3);
+  
+  a *= 5.0;
+  a /= 1024.0;
+  
+ // Serial.print("Button read analog = ");
+//  Serial.println(a);
+  if (a < 0.2) return BUTTON_DOWN;
+  if (a < 1.0) return BUTTON_RIGHT;
+  if (a < 1.5) return BUTTON_SELECT;
+  if (a < 2.0) return BUTTON_UP;
+  if (a < 3.2) return BUTTON_LEFT;
+  else return BUTTON_NONE;
+}
+
+uint8_t buttonhistory = 0;
+
+void loop() {
+  uint8_t b = readButton();
+  tft.setTextSize(3);
+  if (b == BUTTON_DOWN) {
+    tft.setTextColor(ST7735_RED);
+    tft.setCursor(0, 10);
+    tft.print("Down ");
+    buttonhistory |= 1;
+  }
+  if (b == BUTTON_LEFT) {
+    tft.setTextColor(ST7735_YELLOW);
+    tft.setCursor(0, 35);
+     tft.print("Left ");
+    buttonhistory |= 2;
+  }
+  if (b == BUTTON_UP) {
+    tft.setTextColor(ST7735_GREEN);
+    tft.setCursor(0, 60);
+    tft.print("Up"); 
+    buttonhistory |= 4;
+  }
+  if (b == BUTTON_RIGHT) {
+    tft.setTextColor(ST7735_BLUE);
+    tft.setCursor(0, 85);
+    tft.print("Right");
+    buttonhistory |= 8;
+  }
+  if ((b == BUTTON_SELECT) && (buttonhistory == 0xF)) {
+    tft.setTextColor(ST7735_MAGENTA);
+    tft.setCursor(0, 110);
+    tft.print("SELECT");
+    buttonhistory |= 8;
+  }
+  delay(100);
+  if (measured_interval_ready != 0) {
+    tft.fillScreen(ST7735_BLACK);
+    tft.setTextColor(ST7735_GREEN);
+    tft.setCursor(0, 60);
+    tft.setTextSize(2);
+   
+   
+   Serial.print(measured_interval); Serial.print(" + "); Serial.print(measured_interval_u); 
+   
+    measured_interval_ready = 0;
+    
+    long usec = measured_interval;
+    usec *= 250;
+    usec += measured_interval_u;
+    usec /= 2;
+    Serial.print(" -> "); Serial.print(usec); Serial.println(" us "); 
+    double msec = usec / 1000.0f;
+    //Serial.print(msec); Serial.print("ms ");
+    double shutter = 1000.0f / msec;
+    uint16_t s = shutter;
+    tft.setCursor(0, 0);
+    Serial.print("Shutter = ");
+    if (s > 6) {
+        Serial.print("1/");Serial.print(s);Serial.print("s");
+        tft.print("1/"); tft.print(s); tft.print("s"); 
+    }
+    else {
+        Serial.print(msec/1000.0f);Serial.print("s");
+        tft.print(msec/1000.0f); tft.print("s"); 
+    }
+      
+    
+    
+   // Serial.print(" ==> 1/"); Serial.print(shutter); Serial.print("s");
+    Serial.println(); 
+  }
+}
