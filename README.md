@@ -19,5 +19,5 @@ Arduino IDE v1.6.4 was used for testing but newer version of the Arduino IDE sho
 ### Links
 
  * ThingML Source: [https://github.com/TelluIoT/ThingML](https://github.com/TelluIoT/ThingML)
- * ThingML Update site: [http://thingml.org/dist/update2/](http://thingml.org/dist/update2/)
- * ThingML Command Line Compiler: [http://thingml.org/dist/ThingML2CLI.jar](http://thingml.org/dist/ThingML2CLI.jar)
+ * ThingML v2 Update site: [http://thingml.org/dist/update2/](http://thingml.org/dist/update2/)
+ * ThingML v2 Command Line Compiler: [http://thingml.org/dist/ThingML2CLI.jar](http://thingml.org/dist/ThingML2CLI.jar)
