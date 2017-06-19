@@ -1,0 +1,9 @@
+@startuml
+caption Things used in configuration Blink1App
+class Blink1 <<(T,#F94918)PSM>> {
+..Messages..
+-tic()
+..Port clock..
+>>tic
+}
+@enduml

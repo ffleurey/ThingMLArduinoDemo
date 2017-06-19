@@ -1,0 +1,6 @@
+@startuml
+caption Instances and Connectors in configuration Blink1App
+component blink1<<PSM>>
+boundary Timer
+blink1 .. Timer : clock
+@enduml

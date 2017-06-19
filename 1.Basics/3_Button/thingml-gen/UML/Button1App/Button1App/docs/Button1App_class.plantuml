@@ -1,0 +1,35 @@
+@startuml
+caption Things used in configuration Button1App
+class Button1 <<(T,#5BBF09)PIM>> {
+..Port but..
+>>press
+>>release
+}
+class ButtonMsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-press()
+-release()
+}
+class Button <<(T,#F94918)PSM>> {
+..Properties..
+-PIN : UInt8 = 8
+..Port clock..
+>>ms25_tic
+..Port evt..
+<<press
+<<release
+..Functions..
+-is_pressed() : Boolean
+}
+class TimerMsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-timer_start(id : UInt8time : UInt32)
+-timer_cancel(id : UInt8)
+-timer_timeout(id : UInt8)
+-ms25_tic()
+-ms500_tic()
+}
+ButtonMsgs <|-- Button1
+ButtonMsgs <|-- Button
+TimerMsgs <|-- Button
+@enduml

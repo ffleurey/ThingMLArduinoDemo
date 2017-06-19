@@ -1,0 +1,13 @@
+@startuml
+caption Instances and Connectors in configuration Button2App
+component l1<<PSM>>
+component app<<PIM>>
+component button<<PSM>>
+component l2<<PSM>>
+boundary Timer
+app -(0- l2 : led2 => ctrl
+app -(0- button : but => evt
+app -(0- l1 : led1 => ctrl
+button .. Timer : clock
+app .. Timer : timer
+@enduml

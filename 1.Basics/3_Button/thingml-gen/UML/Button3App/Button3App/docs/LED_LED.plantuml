@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultTextAlignment left
+caption Behavior of thing LED
+[*] --> LED
+state LED{
+state READY{
+	READY : ctrl?led_ON / \naction digitalWrite(...)\n
+	READY : ctrl?led_OFF / \naction digitalWrite(...)\n
+}
+[*] --> READY
+	LED : entry / setDigitalOutput(PIN)\n
+}
+@enduml

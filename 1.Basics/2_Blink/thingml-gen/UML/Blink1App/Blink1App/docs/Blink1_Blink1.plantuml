@@ -1,0 +1,19 @@
+@startuml
+skinparam defaultTextAlignment left
+caption Behavior of thing Blink1
+[*] --> Blink1
+state Blink1{
+state OFF{
+	OFF : entry / 'digitalWrite(12, LOW);'\n
+
+OFF --> ON : clock?tic
+}
+state ON{
+	ON : entry / 'digitalWrite(12, HIGH);'\n
+
+ON --> OFF : clock?tic
+}
+[*] --> OFF
+	Blink1 : entry / 'pinMode(12, OUTPUT);'\n
+}
+@enduml

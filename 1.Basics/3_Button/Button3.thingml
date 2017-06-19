@@ -1,0 +1,139 @@
+import "../BUTTON.thingml"
+import "../LED.thingml" 
+
+thing fragment SoftButtonMsgs 
+{
+	message click ();
+	message double_click ();
+	message long_press ();
+}
+
+thing SoftButton includes ButtonMsgs, SoftButtonMsgs, TimerMsgs
+{	
+
+	readonly property long_delay : UInt16 = 1000
+	readonly property double_delay : UInt16 = 250
+
+	required port Button 
+    {
+		receives press, release
+	}
+	
+	required port Timer 
+    {
+		sends timer_start, timer_cancel
+		receives timer_timeout
+	}
+
+	provided port SoftButton 
+    {
+		sends click, double_click, long_press
+	}
+
+	statechart SoftButtonImpl init Idle 
+    {
+        state Idle 
+        { 
+            transition pressed -> Pressed
+            event m: Button?press
+        }
+        
+        state Pressed 
+        {
+			on entry Timer!timer_start (0, long_delay)
+			
+			transition long -> Idle
+			event Timer?timer_timeout
+			action SoftButton!long_press()
+			
+			transition click -> Released
+			event Button?release
+			action Timer!timer_cancel(0)
+        }
+        
+        state Released 
+        {
+        	on entry Timer!timer_start (0, double_delay)
+        	on exit Timer!timer_cancel(0)
+        
+        	transition click -> Idle
+			event Timer?timer_timeout
+			action SoftButton!click()
+			
+			transition double -> Idle
+            event Button?press
+            action SoftButton!double_click () 
+        }
+    }
+}
+
+
+thing TestSoftButtonDoubleClick includes SoftButtonMsgs, LEDMsgs {
+	
+	required port led {sends led_ON, led_OFF}
+	required port softbut {receives double_click, click}
+	
+	statechart Region1 init OFF {
+	
+		internal event softbut?click action print "CLICK\n"
+	
+		state OFF{
+			on entry led!led_OFF()
+			transition -> ON event softbut?double_click
+		}
+		state ON{
+			on entry led!led_ON()
+			transition -> OFF event softbut?double_click
+		}
+	}
+}
+
+
+thing TestSoftButtonLongPress includes SoftButtonMsgs, LEDMsgs {
+	
+	required port led {sends led_ON, led_OFF}
+	required port softbut {receives long_press}
+	
+	statechart Region1 init OFF {
+	
+		state OFF{
+			on entry led!led_OFF()
+			transition -> ON event softbut?long_press
+		}
+		state ON{
+			on entry led!led_ON()
+			transition -> OFF event softbut?long_press
+		}
+	}
+}
+
+
+protocol Timer;
+
+configuration Button3App 
+@arduino_stdout "Serial"
+{
+
+	instance button : Button
+		set button.PIN = 8
+	connector button.clock over Timer	
+	
+	instance l1 : LED
+		set l1.PIN = 11
+	instance l2 : LED
+		set l2.PIN = 12
+	
+	instance sbut : SoftButton
+	connector sbut.Timer over Timer
+	connector sbut.Button => button.evt
+		
+	instance app1 : TestSoftButtonDoubleClick
+	connector app1.softbut => sbut.SoftButton
+	connector app1.led => l1.ctrl
+	
+	instance app2 : TestSoftButtonLongPress
+	connector app2.softbut => sbut.SoftButton
+	connector app2.led => l2.ctrl
+}
+
+

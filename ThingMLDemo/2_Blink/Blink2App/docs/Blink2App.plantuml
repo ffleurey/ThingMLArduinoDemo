@@ -1,8 +1,0 @@
-@startuml
-node "Blink2App"{
-[blink2]
-ctrl_led13 - [led13]
-[blink2] -> ctrl_led13 : led
-[Blink2App_blink2] ..> org.sintef.thingml.impl.ProtocolImpl@62fdb4a6 (name: Timer)
-}
-@enduml

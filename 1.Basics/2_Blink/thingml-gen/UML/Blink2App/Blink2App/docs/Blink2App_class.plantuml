@@ -1,0 +1,38 @@
+@startuml
+caption Things used in configuration Blink2App
+class Blink2 <<(T,#5BBF09)PIM>> {
+..Port timer..
+>>timer_timeout
+<<timer_start
+<<timer_cancel
+..Port led..
+<<led_ON
+<<led_OFF
+}
+class TimerMsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-timer_start(id : UInt8time : UInt32)
+-timer_cancel(id : UInt8)
+-timer_timeout(id : UInt8)
+-ms25_tic()
+-ms500_tic()
+}
+class LEDMsgs <<(T,#5BBF09)PIM>> {
+..Messages..
+-led_ON()
+-led_OFF()
+}
+class LED <<(T,#F94918)PSM>> {
+..Properties..
+-PIN : UInt8 = 11
+..Port ctrl..
+>>led_ON
+>>led_OFF
+..Functions..
+-setDigitalOutput(pin : UInt8) : void
+-digitalWrite(pin : UInt8value : DigitalState) : void
+}
+TimerMsgs <|-- Blink2
+LEDMsgs <|-- Blink2
+LEDMsgs <|-- LED
+@enduml

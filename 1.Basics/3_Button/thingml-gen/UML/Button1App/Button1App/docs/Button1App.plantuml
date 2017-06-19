@@ -1,0 +1,8 @@
+@startuml
+caption Instances and Connectors in configuration Button1App
+component button1<<PIM>>
+component button<<PSM>>
+boundary Timer
+button1 -(0- button : but => evt
+button .. Timer : clock
+@enduml

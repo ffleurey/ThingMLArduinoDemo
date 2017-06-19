@@ -1,0 +1,44 @@
+@startuml
+caption Things used in configuration Blink3App
+class LED <<(T,#F94918)PSM>> {
+..Properties..
+-PIN : UInt8 = 11
+..Port ctrl..
+>>led_ON
+>>led_OFF
+..Functions..
+-setDigitalOutput(...) : void
+-digitalWrite(...) : void
+}
+class LEDMsgs <<(T,#5BBF09)PIM>> {
+..Messages..
+-led_ON()
+-led_OFF()
+}
+class Blink1 <<(T,#F94918)PSM>> {
+..Messages..
+-tic()
+..Port clock..
+>>tic
+}
+class Blink2 <<(T,#5BBF09)PIM>> {
+..Port timer..
+>>timer_timeout
+<<timer_start
+<<timer_cancel
+..Port led..
+<<led_ON
+<<led_OFF
+}
+class TimerMsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-timer_start(...)
+-timer_cancel(...)
+-timer_timeout(...)
+-ms25_tic()
+-ms500_tic()
+}
+LEDMsgs <|-- LED
+TimerMsgs <|-- Blink2
+LEDMsgs <|-- Blink2
+@enduml

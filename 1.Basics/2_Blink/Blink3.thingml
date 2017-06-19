@@ -1,0 +1,17 @@
+import "Blink1.thingml"
+import "Blink2.thingml"
+
+protocol Timer;
+
+configuration Blink3App
+{
+	instance blink1 : Blink1
+	connector blink1.clock over Timer
+	
+	instance blink2 : Blink2
+	instance led13 : LED 
+		set led13.PIN = 11
+	
+	connector blink2.led => led13.ctrl
+	connector blink2.timer over Timer
+}

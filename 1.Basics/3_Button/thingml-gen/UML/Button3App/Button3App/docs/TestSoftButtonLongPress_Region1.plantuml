@@ -1,0 +1,18 @@
+@startuml
+skinparam defaultTextAlignment left
+caption Behavior of thing TestSoftButtonLongPress
+[*] --> Region1
+state Region1{
+state OFF{
+	OFF : entry / led!led_OFF()\n
+
+OFF --> ON : softbut?long_press
+}
+state ON{
+	ON : entry / led!led_ON()\n
+
+ON --> OFF : softbut?long_press
+}
+[*] --> OFF
+}
+@enduml

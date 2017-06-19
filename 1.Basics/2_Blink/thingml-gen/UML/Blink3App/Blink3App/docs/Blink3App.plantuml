@@ -1,0 +1,10 @@
+@startuml
+caption Instances and Connectors in configuration Blink3App
+component led13<<PSM>>
+component blink1<<PSM>>
+component blink2<<PIM>>
+boundary Timer
+blink2 -(0- led13 : led => ctrl
+blink1 .. Timer : clock
+blink2 .. Timer : timer
+@enduml

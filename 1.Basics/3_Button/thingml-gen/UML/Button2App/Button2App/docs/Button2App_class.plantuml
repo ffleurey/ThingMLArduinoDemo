@@ -1,0 +1,63 @@
+@startuml
+caption Things used in configuration Button2App
+class LED <<(T,#F94918)PSM>> {
+..Properties..
+-PIN : UInt8 = 11
+..Port ctrl..
+>>led_ON
+>>led_OFF
+..Functions..
+-setDigitalOutput(pin : UInt8) : void
+-digitalWrite(pin : UInt8value : DigitalState) : void
+}
+class LEDMsgs <<(T,#5BBF09)PIM>> {
+..Messages..
+-led_ON()
+-led_OFF()
+}
+class TestButton <<(T,#5BBF09)PIM>> {
+..Port led1..
+<<led_ON
+<<led_OFF
+..Port led2..
+<<led_ON
+<<led_OFF
+..Port but..
+>>press
+>>release
+..Port timer..
+>>timer_timeout
+<<timer_start
+<<timer_cancel
+}
+class ButtonMsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-press()
+-release()
+}
+class TimerMsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-timer_start(id : UInt8time : UInt32)
+-timer_cancel(id : UInt8)
+-timer_timeout(id : UInt8)
+-ms25_tic()
+-ms500_tic()
+}
+class Button <<(T,#F94918)PSM>> {
+..Properties..
+-PIN : UInt8 = 8
+..Port clock..
+>>ms25_tic
+..Port evt..
+<<press
+<<release
+..Functions..
+-is_pressed() : Boolean
+}
+LEDMsgs <|-- LED
+ButtonMsgs <|-- TestButton
+LEDMsgs <|-- TestButton
+TimerMsgs <|-- TestButton
+ButtonMsgs <|-- Button
+TimerMsgs <|-- Button
+@enduml
