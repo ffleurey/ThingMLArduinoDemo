@@ -1,0 +1,87 @@
+import "_Datatypes.thingml"
+
+thing fragment I2CShieldMsg
+{
+	message LCDready() @debug "true";
+	message button_state();
+	message button_state_response(bstate : UInt8);
+	
+	message print_simple_click();
+	message print_double_click();
+	message print_long_click();
+	message print_dec(num: Float);
+    message print_num(num: Integer);
+	message clear();
+}
+
+
+thing I2CShield includes I2CShieldMsg
+@c_header "
+#include <Adafruit_RGBLCDShield.h>  // RGB LCD Shield communications
+#define WHITE 0x7"
+
+@c_global "
+Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
+uint8_t backlight = WHITE;"
+{
+	provided port button
+	@sync_send "false" // The events are put in the message queue. This avoids processing events in the interrupt routine
+	{
+		receives button_state
+		sends button_state_response
+	}
+	
+	provided port lcd 
+	@sync_send "true"
+	{
+		receives print_num, print_dec, clear, print_simple_click, print_double_click, print_long_click
+		sends LCDready
+	}
+
+
+	statechart RGBLCDShieldSM init Empty @debug "false" {
+		
+		on entry do
+			//print("LCD Init\n")
+			//arduino!setInput(bpin)
+			//'tft.initR(INITR_BLACKTAB);
+			//tft.fillScreen(0x0000);
+			//tft.setTextColor(0xFFFF);'
+		end
+		state Empty {
+			transition -> Setup
+		}
+		
+		state Setup {
+		on entry do 
+			 'lcd.begin(16, 2);         // initialize display colums and rows
+  			  lcd.setBacklight(WHITE);  // Set to OFF if you do not want backlight on boot
+  			  lcd.setCursor(0,0);
+			  lcd.print("                ");
+			  lcd.setCursor(0,1);
+			  lcd.print("                ");
+			  lcd.setCursor(0,0);'
+		end
+			transition -> Idle action do
+			//arduino!serial_print_str("[LCD shield] Ready\n")
+			lcd!LCDready()
+			end
+		}
+		
+		
+		state Idle {
+		
+			property bstate : UInt8 
+			
+			internal event e : lcd?print_simple_click action 'lcd.setCursor(0,0);lcd.print("Simple Click");'
+			internal event e : lcd?print_double_click action 'lcd.setCursor(0,0);lcd.print("Double Click");'
+			internal event e : lcd?print_long_click action 'lcd.setCursor(0,0);lcd.print("Long   Click");'
+			internal event e : lcd?print_num action 'lcd.print('&e.num&');'
+	        internal event e : lcd?print_dec action 'lcd.print('&e.num&');'
+			internal event e : lcd?clear action  'lcd.setCursor(0,0);lcd.print("                ");lcd.setCursor(0,1);lcd.print("                ");lcd.setCursor(0,0);'
+					 							
+		
+		}
+	}
+
+}
