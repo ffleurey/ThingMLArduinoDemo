@@ -1,0 +1,63 @@
+import "I2CShield.thingml"
+
+protocol Timer;
+
+configuration Adafruit_I2C_Shield_App 
+@arduino_stdout "Serial"
+{
+	
+	/* Begin I2C Shield configuration */
+	instance I2CScreen : I2CProvider
+	instance I2CButton : I2Cbutton
+	instance up : UPbutton
+	instance down : DOWNbutton
+	instance left : LEFTbutton
+	instance right : RIGHTbutton
+	instance select : SELECTbutton
+	connector up.listener => I2CButton.listener
+	connector up.I2CShieldButtonMsg => I2CScreen.buttonAccess
+	connector up.clock over Timer
+	connector down.listener => I2CButton.listener
+	connector down.I2CShieldButtonMsg => I2CScreen.buttonAccess
+	connector down.clock over Timer
+	connector right.listener => I2CButton.listener
+	connector right.I2CShieldButtonMsg => I2CScreen.buttonAccess
+	connector right.clock over Timer
+	connector left.listener => I2CButton.listener
+	connector left.I2CShieldButtonMsg => I2CScreen.buttonAccess
+	connector left.clock over Timer
+	connector select.listener => I2CButton.listener
+	connector select.I2CShieldButtonMsg => I2CScreen.buttonAccess
+	connector select.clock over Timer
+	connector I2CScreen.clock over Timer
+	/* End */
+
+	/* Begin Button configuration */
+	instance button : Button
+		set button.PIN = 8
+	connector button.clock over Timer	
+	/* End */
+	
+	/* Begin Led configuration */
+	instance l1 : LED
+		set l1.PIN = 11
+	instance l2 : LED
+		set l2.PIN = 12
+	/* End */	
+	
+	/* Begin Application configuration */
+	instance sbut : SoftButton
+	connector sbut.Timer over Timer
+	connector sbut.Button => button.evt
+	connector sbut.Lcd => I2CScreen.lcd
+	connector sbut.I2Cbutton => I2CButton.button
+			
+	instance app1 : TestSoftButtonDoubleClick
+	connector app1.softbut => sbut.SoftButton
+	connector app1.led => l1.ctrl
+	
+	instance app2 : TestSoftButtonLongPress
+	connector app2.softbut => sbut.SoftButton
+	connector app2.led => l2.ctrl
+	/* End */
+}
