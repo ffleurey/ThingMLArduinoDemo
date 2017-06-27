@@ -1,0 +1,146 @@
+import "../BUTTON.thingml"
+import "../LED.thingml" 
+import "../AdafruitI2CLCDShield.thingml"
+
+thing fragment SoftButtonMsgs 
+{
+	message click ();
+	message double_click ();
+	message long_press ();
+}
+
+thing SoftButton includes ButtonMsgs, SoftButtonMsgs, TimerMsgs,  I2CShieldLCDMsg, ButtonWrapperMsg
+{	
+
+	readonly property long_delay : UInt16 = 1000
+	readonly property double_delay : UInt16 = 250
+
+	required port I2Cbutton
+	{
+		receives up_press, up_release, down_press, down_release, left_press, left_release, right_press, right_release, select_press, select_release  // TODO : pass to UP DOWN LEFT RIGHT SEELCT
+	}
+
+	required port Button 
+    {
+		receives press, release
+	}
+	
+	required port Timer 
+    {
+		sends timer_start, timer_cancel
+		receives timer_timeout
+	}
+	
+	required port Lcd 
+	{
+		sends print_num, print_dec, clear, print_simple_click, print_double_click, print_long_click
+		receives LCDready
+	}
+
+	provided port SoftButton 
+    {
+		sends click, double_click, long_press
+	}
+
+	statechart SoftButtonImpl init Idle 
+    {
+    	internal event I2Cbutton?up_press action print "UP pressed\n"
+    	internal event I2Cbutton?up_release action print "UP released\n"
+    	internal event I2Cbutton?down_press action print "DOWN pressed\n"
+    	internal event I2Cbutton?down_release action print "DOWN released\n"
+    	internal event I2Cbutton?left_press action print "LEFT pressed\n"
+    	internal event I2Cbutton?left_release action print "LEFT released\n"
+    	internal event I2Cbutton?right_press action print "RIGHT pressed\n"
+    	internal event I2Cbutton?right_release action print "RIGHT released\n"
+    	internal event I2Cbutton?select_press action print "SELECT pressed\n"
+    	internal event I2Cbutton?select_release action print "SELECT released\n"
+        state Idle 
+        { 
+        	on exit do
+				Lcd!clear()
+		 	end
+            transition pressed -> Pressed
+            event m: Button?press
+            
+            
+        }
+        
+        state Pressed 
+        {
+			on entry do
+				Timer!timer_start (0, long_delay)
+			end
+			
+			transition long -> Idle
+			event Timer?timer_timeout
+			action do
+				Lcd!print_long_click()
+				SoftButton!long_press()
+			end	
+			transition click -> Released
+			event Button?release
+			action Timer!timer_cancel(0)
+        }
+        
+        state Released 
+        {
+        	on entry Timer!timer_start (0, double_delay)
+        	on exit Timer!timer_cancel(0)
+        
+        	transition click -> Idle
+			event Timer?timer_timeout
+			action do
+				Lcd!print_simple_click()
+				SoftButton!click()
+			end
+			
+			transition double -> Idle
+            event Button?press
+            action do
+		        Lcd!print_double_click()
+		        SoftButton!double_click () 
+	        end
+        }
+    }
+}
+
+
+thing TestSoftButtonDoubleClick includes SoftButtonMsgs, LEDMsgs{
+	
+	required port led {sends led_ON, led_OFF}
+	required port softbut {receives double_click, click}
+	
+	statechart Region1 init OFF {
+	
+		
+		state OFF{
+			on entry led!led_OFF()
+			transition -> ON event softbut?double_click
+		}
+		state ON{
+			on entry led!led_ON()
+			transition -> OFF event softbut?double_click
+		}
+	}
+}
+
+
+thing TestSoftButtonLongPress includes SoftButtonMsgs, LEDMsgs{
+	
+	required port led {sends led_ON, led_OFF}
+	required port softbut {receives long_press}
+	
+	statechart Region1 init OFF {
+	
+		state OFF{
+			on entry led!led_OFF()
+			transition -> ON event softbut?long_press
+		}
+		state ON{
+			on entry led!led_ON()
+			transition -> OFF event softbut?long_press
+		}
+	}
+}
+
+

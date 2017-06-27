@@ -1,0 +1,378 @@
+import "_Datatypes.thingml"
+
+
+thing fragment ButtonWrapperMsg
+{
+	message up_press()
+	message up_release()
+	message down_press()
+	message down_release()
+	message left_press()
+	message left_release()
+	message right_press()
+	message right_release()
+	message select_press()
+	message select_release()
+	
+	message up_pressed()
+	message up_released()
+	message down_pressed()
+	message down_released()
+	message left_pressed()
+	message left_released()
+	message right_pressed()
+	message right_released()
+	message select_pressed()
+	message select_released()
+
+}
+
+thing fragment I2CShieldLCDMsg
+{
+	message LCDready() @debug "true";
+	
+	message print_simple_click();
+	message print_double_click();
+	message print_long_click();
+	message print_dec(num: Float);
+    message print_num(num: Integer);
+	message clear();
+}
+
+thing fragment I2CShieldButtonMsg
+{
+	message buttons_state(msg : UInt8)
+}
+
+thing I2CProvider includes I2CShieldLCDMsg, I2CShieldButtonMsg, TimerMsgs
+@c_header "
+#include <Adafruit_RGBLCDShield.h>  // RGB LCD Shield communications
+#define WHITE 0x7"
+
+@c_global "
+Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
+uint8_t backlight = WHITE;"
+{
+	required port clock {
+		receives ms25_tic
+	}
+	
+	provided port lcd 
+	@sync_send "true"
+	{
+		receives print_num, print_dec, clear, print_simple_click, print_double_click, print_long_click
+		sends LCDready
+	}
+
+	provided port buttonAccess
+	{
+		sends buttons_state
+	}
+	
+	
+	function bstate() : UInt8 do
+		return 'lcd.readButtons()'
+	end
+
+	statechart RGBLCDShieldSM init Empty @debug "false" {
+		
+		state Empty {
+			transition -> Setup
+		}
+		
+		state Setup {
+		on entry do 
+			 'lcd.begin(16, 2);         // initialize display colums and rows
+  			  lcd.setBacklight(WHITE);  // Set to OFF if you do not want backlight on boot
+  			  lcd.setCursor(0,0);
+			  lcd.print("                ");
+			  lcd.setCursor(0,1);
+			  lcd.print("                ");
+			  lcd.setCursor(0,0);'
+		end
+			transition -> Idle action do
+			//arduino!serial_print_str("[LCD shield] Ready\n")
+			lcd!LCDready()
+			end
+		}
+
+		state Idle {
+		
+			internal event e : lcd?print_simple_click action 'lcd.setCursor(0,0);lcd.print("Simple Click");'
+			internal event e : lcd?print_double_click action 'lcd.setCursor(0,0);lcd.print("Double Click");'
+			internal event e : lcd?print_long_click action 'lcd.setCursor(0,0);lcd.print("Long   Click");'
+			internal event e : lcd?print_num action 'lcd.print('&e.num&');'
+	        internal event e : lcd?print_dec action 'lcd.print('&e.num&');'
+			internal event e : lcd?clear action  'lcd.setCursor(0,0);
+												  lcd.print("                ");
+												  lcd.setCursor(0,1);
+												  lcd.print("                ");
+												  lcd.setCursor(0,0);'
+ 			internal event e : clock?ms25_tic action buttonAccess!buttons_state(bstate())
+ 											  
+		}
+		
+	}
+}
+
+
+thing I2Cbutton includes ButtonWrapperMsg
+{
+	
+	provided port button
+	@sync_send "false" // The events are put in the message queue. This avoids processing events in the interrupt routine
+	{
+		sends up_press, up_release, down_press, down_release, left_press, left_release, right_press, right_release, select_press, select_release  // TODO : pass to UP DOWN LEFT RIGHT SEELCT
+	}
+		
+	provided port listener
+	@sync_send "false" 
+	{
+		receives up_pressed, up_released, down_pressed, down_released, left_pressed, left_released, right_pressed, right_released, select_pressed, select_released  // TODO : pass to UP DOWN LEFT RIGHT SEELCT
+	
+	}	
+	
+	
+	statechart I2CButton init None {
+		state None {
+			internal event e : listener?up_pressed action button!up_press()
+			internal event e : listener?up_released action button!up_release()
+			internal event e : listener?down_pressed action button!down_press()
+			internal event e : listener?down_released action button!down_release()
+			internal event e : listener?left_pressed action button!left_press()
+			internal event e : listener?left_released action button!left_release()
+			internal event e : listener?right_pressed action button!right_press()
+			internal event e : listener?right_released action button!right_release()
+			internal event e : listener?select_pressed action button!select_press()
+			internal event e : listener?select_released action button!select_release()
+		}
+	}
+}
+
+
+thing UPbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
+{
+	required port clock {
+		receives ms25_tic
+	}
+	required port listener
+	{
+		sends up_pressed, up_released	
+	}
+	
+	required port I2CShieldButtonMsg
+	{
+		receives buttons_state
+	}
+	
+	property data : UInt8 = 0
+	
+	function is_pressed() : Boolean do
+		return ''&data&'& BUTTON_UP'
+	end
+	
+	
+	
+	statechart I2CUPButton init RELEASED {
+		
+		
+		internal event e : I2CShieldButtonMsg?buttons_state action data = e.msg
+	
+	
+		state RELEASED {
+			transition -> PRESSED event clock?ms25_tic
+			guard is_pressed()
+			action listener!up_pressed()
+		}
+		
+		state PRESSED {
+			transition -> RELEASED event clock?ms25_tic
+			guard not is_pressed()
+			action listener!up_released()
+		}
+	}
+}
+
+thing DOWNbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
+{
+	required port clock {
+		receives ms25_tic
+	}
+	required port listener
+	{
+		sends down_pressed, down_released	
+	}
+	
+	required port I2CShieldButtonMsg
+	{
+		receives buttons_state
+	}
+	
+	property data : UInt8 = 0
+	
+	function is_pressed() : Boolean do
+		return ''&data&'& BUTTON_DOWN'
+	end
+	
+	
+	
+	statechart I2CDOWNButton init RELEASED {
+		
+		
+		internal event e : I2CShieldButtonMsg?buttons_state action data = e.msg
+	
+	
+		state RELEASED {
+			transition -> PRESSED event clock?ms25_tic
+			guard is_pressed()
+			action listener!down_pressed()
+		}
+		
+		state PRESSED {
+			transition -> RELEASED event clock?ms25_tic
+			guard not is_pressed()
+			action listener!down_released()
+		}
+	}
+}
+
+
+thing RIGHTbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
+{
+	required port clock {
+		receives ms25_tic
+	}
+	required port listener
+	{
+		sends right_pressed, right_released	
+	}
+	
+	required port I2CShieldButtonMsg
+	{
+		receives buttons_state
+	}
+	
+	property data : UInt8 = 0
+	
+	function is_pressed() : Boolean do
+		return ''&data&'& BUTTON_RIGHT'
+	end
+	
+	
+	
+	statechart I2CRIGHTButton init RELEASED {
+		
+		
+		internal event e : I2CShieldButtonMsg?buttons_state action data = e.msg
+	
+	
+		state RELEASED {
+			transition -> PRESSED event clock?ms25_tic
+			guard is_pressed()
+			action listener!right_pressed()
+		}
+		
+		state PRESSED {
+			transition -> RELEASED event clock?ms25_tic
+			guard not is_pressed()
+			action listener!right_released()
+		}
+	}
+}
+
+
+
+thing LEFTbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
+{
+	required port clock {
+		receives ms25_tic
+	}
+	required port listener
+	{
+		sends left_pressed, left_released	
+	}
+	
+	required port I2CShieldButtonMsg
+	{
+		receives buttons_state
+	}
+	
+	property data : UInt8 = 0
+	
+	function is_pressed() : Boolean do
+		return ''&data&'& BUTTON_LEFT'
+	end
+	
+	
+	
+	statechart I2CLEFTButton init RELEASED {
+		
+		
+		internal event e : I2CShieldButtonMsg?buttons_state action data = e.msg
+	
+	
+		state RELEASED {
+			transition -> PRESSED event clock?ms25_tic
+			guard is_pressed()
+			action listener!left_pressed()
+		}
+		
+		state PRESSED {
+			transition -> RELEASED event clock?ms25_tic
+			guard not is_pressed()
+			action listener!left_released()
+		}
+	}
+}
+
+
+
+thing SELECTbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
+{
+	required port clock {
+		receives ms25_tic
+	}
+	required port listener
+	{
+		sends select_pressed, select_released	
+	}
+	
+	required port I2CShieldButtonMsg
+	{
+		receives buttons_state
+	}
+	
+	property data : UInt8 = 0
+	
+	function is_pressed() : Boolean do
+		return ''&data&'& BUTTON_SELECT'
+	end
+	
+	
+	
+	statechart I2CSELECTButton init RELEASED {
+		
+		
+		internal event e : I2CShieldButtonMsg?buttons_state action data = e.msg
+	
+	
+		state RELEASED {
+			transition -> PRESSED event clock?ms25_tic
+			guard is_pressed()
+			action listener!select_pressed()
+		}
+		
+		state PRESSED {
+			transition -> RELEASED event clock?ms25_tic
+			guard not is_pressed()
+			action listener!select_released()
+		}
+	}
+}
+
+
+
+
+
+
+
