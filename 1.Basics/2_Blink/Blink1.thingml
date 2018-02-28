@@ -8,15 +8,15 @@ thing Blink1 {
 
 	statechart Blink1 init OFF {
 	
-		on entry 'pinMode(12, OUTPUT);'
+		on entry `pinMode(12, OUTPUT);`
 	
 		state OFF {
-			on entry 'digitalWrite(12, LOW);'
+			on entry `digitalWrite(12, LOW);`
 			transition -> ON event clock?tic 
 		}	
 		
 		state ON {
-			on entry 'digitalWrite(12, HIGH);'
+			on entry `digitalWrite(12, HIGH);`
 			transition -> OFF event clock?tic 
 		}	
 	}

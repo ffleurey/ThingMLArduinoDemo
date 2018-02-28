@@ -3,10 +3,10 @@ thing HelloWorld {
 
 	statechart HelloWorld init Greetings {
 	
-		on entry 'Serial.begin(9600);'
+		on entry `Serial.begin(9600);`
 	
 		state Greetings {
-				on entry 'Serial.println("Hello World!");'	
+				on entry `Serial.println("Hello World!");`	
 		}	
 	}
 }

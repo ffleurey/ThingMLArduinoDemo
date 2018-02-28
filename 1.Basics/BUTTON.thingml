@@ -21,7 +21,7 @@ thing Button includes ButtonMsgs, TimerMsgs
 	property PIN: UInt8 = 8
 	
 	function is_pressed() : Boolean do
-		return 'digitalRead('&PIN&')'
+		return `digitalRead('&PIN&')`
 	end
 	
 	statechart Button init RELEASED {

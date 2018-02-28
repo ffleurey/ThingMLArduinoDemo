@@ -71,7 +71,7 @@ uint8_t backlight = WHITE;"
 	
 	
 	function bstate() : UInt8 do
-		return 'lcd.readButtons()'
+		return `lcd.readButtons()`
 	end
 
 	statechart RGBLCDShieldSM init Empty @debug "false" {
@@ -82,13 +82,13 @@ uint8_t backlight = WHITE;"
 		
 		state Setup {
 		on entry do 
-			 'lcd.begin(16, 2);         // initialize display colums and rows
+			 `lcd.begin(16, 2);         // initialize display colums and rows
   			  lcd.setBacklight(WHITE);  // Set to OFF if you do not want backlight on boot
   			  lcd.setCursor(0,0);
 			  lcd.print("                ");
 			  lcd.setCursor(0,1);
 			  lcd.print("                ");
-			  lcd.setCursor(0,0);'
+			  lcd.setCursor(0,0);`
 		end
 			transition -> Idle action do
 			//arduino!serial_print_str("[LCD shield] Ready\n")
@@ -98,16 +98,16 @@ uint8_t backlight = WHITE;"
 
 		state Idle {
 		
-			internal event e : lcd?print_simple_click action 'lcd.setCursor(0,0);lcd.print("Simple Click");'
-			internal event e : lcd?print_double_click action 'lcd.setCursor(0,0);lcd.print("Double Click");'
-			internal event e : lcd?print_long_click action 'lcd.setCursor(0,0);lcd.print("Long   Click");'
-			internal event e : lcd?print_num action 'lcd.print('&e.num&');'
-	        internal event e : lcd?print_dec action 'lcd.print('&e.num&');'
-			internal event e : lcd?clear action  'lcd.setCursor(0,0);
+			internal event e : lcd?print_simple_click action `lcd.setCursor(0,0);lcd.print("Simple Click");`
+			internal event e : lcd?print_double_click action `lcd.setCursor(0,0);lcd.print("Double Click");`
+			internal event e : lcd?print_long_click action `lcd.setCursor(0,0);lcd.print("Long   Click");`
+			internal event e : lcd?print_num action `lcd.print(`&e.num&`);`
+	        internal event e : lcd?print_dec action `lcd.print(`&e.num&`);`
+			internal event e : lcd?clear action  `lcd.setCursor(0,0);
 												  lcd.print("                ");
 												  lcd.setCursor(0,1);
 												  lcd.print("                ");
-												  lcd.setCursor(0,0);'
+												  lcd.setCursor(0,0);`
  			internal event e : clock?ms25_tic action buttonAccess!buttons_state(bstate())
  											  
 		}
@@ -168,7 +168,7 @@ thing UPbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
 	property data : UInt8 = 0
 	
 	function is_pressed() : Boolean do
-		return ''&data&'& BUTTON_UP'
+		return ``&data&`& BUTTON_UP`
 	end
 	
 	
@@ -211,7 +211,7 @@ thing DOWNbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
 	property data : UInt8 = 0
 	
 	function is_pressed() : Boolean do
-		return ''&data&'& BUTTON_DOWN'
+		return ``&data&`& BUTTON_DOWN`
 	end
 	
 	
@@ -255,7 +255,7 @@ thing RIGHTbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
 	property data : UInt8 = 0
 	
 	function is_pressed() : Boolean do
-		return ''&data&'& BUTTON_RIGHT'
+		return ``&data&`& BUTTON_RIGHT`
 	end
 	
 	
@@ -300,7 +300,7 @@ thing LEFTbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
 	property data : UInt8 = 0
 	
 	function is_pressed() : Boolean do
-		return ''&data&'& BUTTON_LEFT'
+		return ``&data&`& BUTTON_LEFT`
 	end
 	
 	
@@ -345,7 +345,7 @@ thing SELECTbutton includes ButtonWrapperMsg, I2CShieldButtonMsg, TimerMsgs
 	property data : UInt8 = 0
 	
 	function is_pressed() : Boolean do
-		return ''&data&'& BUTTON_SELECT'
+		return ``&data&`& BUTTON_SELECT`
 	end
 	
 	

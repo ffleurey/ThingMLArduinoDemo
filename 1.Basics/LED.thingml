@@ -14,18 +14,18 @@ thing LED includes LEDMsgs {
 	}
 	
 	function setDigitalOutput(pin: UInt8) do
-		'pinMode('&pin&', OUTPUT);'
+		`pinMode(`&pin&`, OUTPUT);`
 	end
 	
 	function digitalWrite(pin: UInt8, value : DigitalState) do
-		'digitalWrite('&pin&', '&value&');'
+		`digitalWrite(`&pin&`, `&value&`);`
 	end
 	
 	statechart LED init READY {
 		on entry setDigitalOutput(PIN)
 		state READY {
-			internal event ctrl?led_ON action digitalWrite(PIN, 1)
-			internal event ctrl?led_OFF action digitalWrite(PIN, 0)
+			internal event ctrl?led_ON action digitalWrite(PIN, DigitalState:HIGH)
+			internal event ctrl?led_OFF action digitalWrite(PIN, DigitalState:LOW)
 		}
 	}
 }
