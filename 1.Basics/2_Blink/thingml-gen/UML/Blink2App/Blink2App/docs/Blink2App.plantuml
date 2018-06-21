@@ -1,8 +1,0 @@
-@startuml
-caption Instances and Connectors in configuration Blink2App
-component blink2<<PIM>>
-component led13<<PSM>>
-boundary Timer
-blink2 -(0- led13 : led => ctrl
-blink2 .. Timer : timer
-@enduml
